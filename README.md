@@ -1,6 +1,38 @@
 # slackernews
 Slacker News is a reporting tool to analyze the logs of a fictional news website.
 
+## Setup and Usage
+1. Install VirtualBox, which you can
+[download from here](https://www.virtualbox.org/wiki/Download_Old_Builds_5_1)
+
+1. Install Vagrant, which you can [download from here](https://www.vagrantup.com/downloads.html)
+
+1. Start and log in to the virtual machine with `vagrant up` followed by
+  `vagrant ssh`.
+
+1. Once logged in to the virtual machine, `cd /vagrant` to get to the directory
+shared with your regular laptop.
+
+1. Clone this repository to get all the necessary files you'll need.
+
+1. [Download the data here](https://d17h27t6h515a5.cloudfront.net/topher/2016/August/57b5f748_newsdata/newsdata.zip)
+and unzip it to reveal `newsdata.sql`, then move it to /vagrant
+
+1. From the directory where your data is stored, load the data with the psql command.
+```
+$ psql -d news -f newsdata.sql
+```
+
+1. Create the necessary views of the database.
+```
+$ psql -d news -f views.sql
+```
+
+1. Run the Python script to generate the output
+```
+$ python3 all_time_popular.py
+```
+
 ## Output
 This tool produces three reports in plain text:
 
