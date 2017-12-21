@@ -21,7 +21,7 @@ The logs are stored in a SQL database with the following structure:
 ### Table "Articles"
 
 Column |           Type           |                       Modifiers                       
---------+--------------------------+-------------------------------------------------------
+--------|--------------------------|-------------------------------------------------------
 author | integer                  | not null
 title  | text                     | not null
 slug   | text                     | not null
@@ -29,6 +29,7 @@ lead   | text                     |
 body   | text                     |
 time   | timestamp with time zone | default now()
 id     | integer                  | not null default nextval('articles_id_seq'::regclass)
+
 Indexes:
    "articles_pkey" PRIMARY KEY, btree (id)
    "articles_slug_key" UNIQUE CONSTRAINT, btree (slug)
@@ -38,10 +39,11 @@ Foreign-key constraints:
 ### Table "Authors"
 
 Column |  Type   |                      Modifiers                       
---------+---------+------------------------------------------------------
+--------|--------|------------------------------------------------------
 name   | text    | not null
 bio    | text    |
 id     | integer | not null default nextval('authors_id_seq'::regclass)
+
 Indexes:
    "authors_pkey" PRIMARY KEY, btree (id)
 Referenced by:
@@ -50,23 +52,73 @@ Referenced by:
 ### Table "Log"
 
 Column |           Type           |                    Modifiers                     
---------+--------------------------+--------------------------------------------------
+--------|--------------------------|--------------------------------------------------
 path   | text                     |
 ip     | inet                     |
 method | text                     |
 status | text                     |
 time   | timestamp with time zone | default now()
 id     | integer                  | not null default nextval('log_id_seq'::regclass)
+
 Indexes:
    "log_pkey" PRIMARY KEY, btree (id)
 
-### View "titles-log"
-Path format is /article/title so we need to convert the title to its associated id
+## Custom Views
+You must create the custom views below before running the Python script.
 
-create view titles-log as
-  select path, ip, method, status, time, id
+### View "titles_log"
+Path format is /article/title so we need to extract the title (substring
+  starting at character 10).
 
-create view articles-log as
-  select articles.id, log.ip, log.time, log.status, log.id
-  from log join articles
-  using
+```
+CREATE VIEW titles_log AS
+  SELECT SUBSTRING(path, 10) AS title, time, status
+  FROM log;
+```
+
+### View "articles_log"
+Create a view associating the article ID with each log entry.
+
+```
+CREATE VIEW articles_log AS
+  SELECT articles.id, authors.name, articles.title, titles_log.time,
+  titles_log.status
+  FROM titles_log
+  LEFT JOIN articles
+  ON (titles_log.title = articles.slug)
+  LEFT JOIN authors
+  ON (articles.author = authors.id)
+  WHERE length(titles_log.title) > 0;
+```
+
+### View "dates"
+Create a view of the log separating out the date from the timestamp.
+
+```
+CREATE VIEW dates AS
+  SELECT to_char(DATE_TRUNC('day', time), 'YYYY-MM-DD') AS date, status
+  FROM log;
+```
+
+### View "requests"
+Create a view of the log counting all requests.
+
+```
+CREATE VIEW requests AS
+  SELECT date, count(*) AS requests
+  FROM dates
+  GROUP BY date
+  ORDER BY requests DESC;
+```
+
+### View "errors"
+Create a view of the log filtering for just the errors.
+
+```
+CREATE VIEW errors AS
+  SELECT date, count(*) AS errors
+  FROM dates
+  WHERE status != '200 OK'
+  GROUP BY date
+  ORDER BY errors DESC;
+```
