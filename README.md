@@ -23,12 +23,12 @@ and unzip it to reveal `newsdata.sql`, then move it to /vagrant
 $ psql -d news -f newsdata.sql
 ```
 
-1. Create the necessary views of the database.
+8. Create the necessary views of the database.
 ```
 $ psql -d news -f views.sql
 ```
 
-1. Run the Python script to generate the output
+9. Run the Python script to generate the output
 ```
 $ python3 all_time_popular.py
 ```
