@@ -1,5 +1,6 @@
 # slackernews
-Slacker News is a reporting tool to analyze the logs of a fictional news website.
+Slacker News is a reporting tool written in Python to analyze the logs of a
+fictional news website stored in a SQL database.
 
 ## Setup and Usage
 1. Install VirtualBox, which you can
@@ -97,6 +98,7 @@ Indexes:
 
 ## Custom Views
 You must create the custom views below before running the Python script.
+For your convenience, these are provided in this repository as `views.sql`
 
 ### View "titles_log"
 Path format is /article/title so we need to extract the title (substring
